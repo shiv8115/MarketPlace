@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "hardhat/console.sol";
 
-contract market is ReentrancyGuard{   
+contract marketUpgrade is Initializable, ReentrancyGuard{   
     struct Listing{
         address nftAddress;
         address seller;
@@ -28,10 +28,10 @@ contract market is ReentrancyGuard{
    mapping(address => mapping(uint256 => Listing)) private s_listings;
    mapping(address => uint256) private s_proceeds;
 
-   constructor(address nft20){
-       Owner= payable(msg.sender);
-       NFT20= nft20;
-   }
+   function init(address _NFT20) external initializer {
+        Owner = payable(msg.sender);
+        NFT20 = _NFT20;
+    }
 
    modifier notListed(address nftAddress,uint256 tokenId,address owner) {
         Listing memory listing = s_listings[nftAddress][tokenId];
