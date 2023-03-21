@@ -40,11 +40,33 @@ describe("Marketplace Buy Function", function () {
     await loadFixture(deployMarket);
   });
 
+  it("Items should reverted if not listed", async function(){
+    await expect(Market.buyItem(Erc721.address, TOKEN_ID,1,{ value: 2 })).to.be.revertedWith("Not listed");
+
+})
+
+it("should be reverted if balance is not sufficient", async function () {
+  // List item for sale
+  await Erc721.Safemint();
+  await Erc721.approve(Market.address, TOKEN_ID);
+  await Market.listItem(Erc721.address, TOKEN_ID, 50, 1, 1);
+
+  // Buy item
+  const listing = await Market.getListing(Erc721.address, TOKEN_ID);
+  const price = listing.price.toString();
+  const quant = listing.quantity;
+  await expect(Market.buyItem(Erc721.address, TOKEN_ID,2,{ value: 100 })).to.be.revertedWith("Required quantity not available");
+});
+
+it("should be reverted if balance is not sufficient", async function () {
+  await expect(Market.buyItem(Erc721.address, TOKEN_ID,1,{ value: 0 })).to.be.revertedWith("Insufficient balance");
+});
+
   it("Buy item", async function () {
     // List item for sale
-    await Erc721.Safemint();
+   // await Erc721.Safemint();
     await Erc721.approve(Market.address, TOKEN_ID);
-    await Market.listItem(Erc721.address, TOKEN_ID, 50, 1, 1);
+   // await Market.listItem(Erc721.address, TOKEN_ID, 50, 1, 1);
 
     // Buy item
     const listing = await Market.getListing(Erc721.address, TOKEN_ID);
@@ -59,4 +81,14 @@ describe("Marketplace Buy Function", function () {
     expect(listing_.quantity).to.equal(0);
     expect(listing_.price).to.equal(0);
   });
+
+  it("Should able to obtain seller proceed", async function(){
+    const listing = await Market.getListing(Erc721.address, TOKEN_ID);
+    const seller= listing.seller;
+    const actualNum = (await Market.getProceeds(listing.seller)).toNumber();
+    const expected= listing.price;
+
+    expect(actualNum).to.equal(expected);
+
+})
 });
